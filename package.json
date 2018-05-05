@@ -8,8 +8,7 @@
   },
   "scripts": {
     "lint": "standard && standard bin/node-lambda",
-    "test": "npm run lint && npm run unit",
-    "unit": "mocha",
+    "test": "mocha",
     "deploy": "./bin/node-lambda deploy",
     "start": "./bin/node-lambda run"
   },
@@ -44,16 +43,18 @@
   "dependencies": {
     "amazon-cognito-auth-js": "^1.1.1",
     "amazon-cognito-identity-js": "github:aws/amazon-cognito-identity-js#c82b936991d4e8aedf02302817f4f21428d246cc",
-    "archiver": "^2.0.3",
+    "archiver": "^2.1.1",
     "async": "^2.6.0",
     "aws-sdk": "^2.164.0",
     "commander": "^2.12.2",
     "dotenv": "^0.4.0",
+    "dynamoose": "^0.8.7",
     "fs-extra": "^0.30.0",
     "jsbn": "^1.1.0",
     "minimatch": "^3.0.3",
     "npm": "^5.7.1",
     "proxy-agent": "^2.1.0",
+    "randomstring": "^1.1.5",
     "sjcl": "^1.0.7"
   }
 }

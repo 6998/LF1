@@ -1,0 +1,290 @@
+{
+  "options": {
+    "18-12": {
+      "word": "custom_val",
+      "values": "0",
+      "type": "number",
+      "key": "18-12",
+      "rangeOrType": "range",
+      "jumps": 0.1,
+      "range": {
+        "from": 0,
+        "to": 1
+      }
+    },
+    "19-12": {
+      "word": "custom_val",
+      "values": "1,2,3,4,5,6",
+      "type": "number",
+      "key": "19-12",
+      "rangeOrType": "options",
+      "jumps": 0.1,
+      "range": {
+        "from": 0,
+        "to": 1
+      }
+    },
+    "20-12": {
+      "word": "custom_val",
+      "values": "a,b,c,d,e",
+      "type": "string",
+      "key": "20-12",
+      "rangeOrType": "options",
+      "jumps": 0.1,
+      "range": {
+        "from": 0,
+        "to": 1
+      }
+    },
+    "21-12": {
+      "word": "custom_val",
+      "values": "true,false",
+      "type": "boolean",
+      "key": "21-12",
+      "rangeOrType": "options",
+      "jumps": 0.1,
+      "range": {
+        "from": 0,
+        "to": 1
+      }
+    }
+  },
+  "codeArr": [
+    [
+      "",
+      "&nbsp;&nbsp;",
+      "",
+      "&nbsp;&nbsp;",
+      ""
+    ],
+    [
+      "from",
+      " ",
+      "__future__",
+      " ",
+      "import",
+      " ",
+      "print_function"
+    ],
+    [],
+    [
+      "import",
+      " ",
+      "sys"
+    ],
+    [],
+    [
+      "from",
+      " ",
+      "comet_ml",
+      " ",
+      "import",
+      " ",
+      "Experiment"
+    ],
+    [],
+    [],
+    [
+      "import",
+      " ",
+      "os"
+    ],
+    [],
+    [],
+    [
+      "def",
+      " ",
+      "main",
+      "(",
+      "",
+      ")",
+      ":"
+    ],
+    [],
+    [
+      "",
+      "&nbsp;&nbsp;",
+      "",
+      "&nbsp;&nbsp;",
+      "",
+      "&nbsp;&nbsp;",
+      "url",
+      "=",
+      "",
+      " ",
+      "os.environ",
+      "[",
+      "",
+      "'",
+      "COMET_URL_OVERRIDE",
+      "'",
+      "",
+      "]",
+      ""
+    ],
+    [
+      "",
+      "&nbsp;&nbsp;",
+      "api_key_var",
+      " ",
+      "",
+      "=",
+      "",
+      " ",
+      "sys.argv",
+      "[",
+      "1",
+      "]",
+      ";"
+    ],
+    [
+      "",
+      "&nbsp;&nbsp;",
+      "project_name_var",
+      " ",
+      "",
+      "=",
+      "",
+      " ",
+      "sys.argv",
+      "[",
+      "2",
+      "]",
+      ";"
+    ],
+    [
+      "",
+      "&nbsp;&nbsp;",
+      "custom_val",
+      " ",
+      "",
+      "=",
+      "",
+      " ",
+      "sys.argv",
+      "[",
+      "3",
+      "]",
+      ";"
+    ],
+    [
+      "",
+      "&nbsp;&nbsp;",
+      "experiment",
+      " ",
+      "",
+      "=",
+      "",
+      " ",
+      "Experiment",
+      "(",
+      "api_key",
+      "=",
+      "api_key_var",
+      ",",
+      "",
+      " ",
+      "project_name",
+      "=",
+      "project_name_var",
+      ")",
+      ";"
+    ],
+    [
+      "",
+      "&nbsp;&nbsp;",
+      "experiment.log_parameter",
+      "(",
+      "",
+      "\"",
+      "param1",
+      "\"",
+      "",
+      ",",
+      "",
+      " ",
+      "custom_val",
+      ")",
+      ""
+    ],
+    [
+      "",
+      "&nbsp;&nbsp;",
+      "experiment.log_parameter",
+      "(",
+      "",
+      "\"",
+      "param2",
+      "\"",
+      "",
+      ",",
+      "",
+      " ",
+      "custom_val",
+      ")",
+      ""
+    ],
+    [
+      "",
+      "&nbsp;&nbsp;",
+      "experiment.log_parameter",
+      "(",
+      "",
+      "\"",
+      "param3",
+      "\"",
+      "",
+      ",",
+      "",
+      " ",
+      "custom_val",
+      ")",
+      ""
+    ],
+    [
+      "",
+      "&nbsp;&nbsp;",
+      "experiment.log_parameter",
+      "(",
+      "",
+      "\"",
+      "param4",
+      "\"",
+      "",
+      ",",
+      "",
+      " ",
+      "custom_val",
+      ")",
+      ""
+    ],
+    [],
+    [
+      "if",
+      " ",
+      "__name__",
+      " ",
+      "",
+      "=",
+      "",
+      "=",
+      "",
+      " ",
+      "",
+      "'",
+      "__main__",
+      "'",
+      ":"
+    ],
+    [
+      "",
+      "&nbsp;&nbsp;",
+      "main",
+      "(",
+      "",
+      ")",
+      ""
+    ],
+    []
+  ]
+}
