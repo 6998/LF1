@@ -6,7 +6,7 @@ const path = require('path');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const randomstring = require("randomstring");
 const dynamoose = require('dynamoose');
-
+const DIR = process.env.DIR
 
 // docker template
 let dockerfile = "FROM python:3.4-alpine\n" +
@@ -33,12 +33,18 @@ const Run = dynamoose.model('Run', {
   options: Object,
   s3: Object,
   err: Object,
-  user: String
+  user: String,
+  projectName: String,
+  projectId: String,
+  mode: String
 }, { update: false });
 
 
 const saveRuns = (items, user, cb)=> {
-  Run.batchPut(Object.values(items), function (err, p) {
+  const arr = Object.keys(items).map(function(key) {
+    return items[key];
+  });
+  Run.batchPut(arr, function (err, p) {
     if (err) {
       console.log(err);
     } else {
@@ -46,6 +52,7 @@ const saveRuns = (items, user, cb)=> {
     return cb(err);
   })
 }
+
 /******************************************/
 
 const createArray = (item) => {
@@ -135,13 +142,10 @@ const renderFile = (codeArr, options)=>{
     finalFile += "\n";
   });
 
-
-
   return {finalFile, options};
 };
 
 const createZipAndUpload = (fileObj, jobNum, cb)=>{
-  const dir = '/tmp';
   const file = fileObj.finalFile;
   const options = fileObj.options;
   // inject the os and the:
@@ -173,68 +177,114 @@ const createZipAndUpload = (fileObj, jobNum, cb)=>{
   const finalFile = [].concat(part1).concat(part2).concat(part3).join("\n");
   dockerfile = dockerfile += envVarsArrForDocker.join("\n");
   //create the Dockerfile
-  fs.writeFileSync("/tmp/Dockerfile", dockerfile);
+  fs.writeFileSync(`${DIR}/Dockerfile`, dockerfile);
+  fs.writeFileSync(`${DIR}/app.py`, finalFile);
 
 
   // save the file
   const rand = randomstring.generate(7);
   const fileName = `job_num_${jobNum}_rand_${rand}.zip`;
-  const filePath = `/tmp/${fileName}`
+  const filePath = `${DIR}/${fileName}`
   const output = file_system.createWriteStream(filePath);
   const archive = archiver('zip');
 
   output.on('close', function () {
-    console.log(archive.pointer() + ' total bytes');
     console.log('archiver has been finalized and the output file descriptor has closed.');
   });
 
   archive.on('error', function(err){
-    console.log(err)
+    console.log("error saving file:", err)
     // throw err;
   });
 
+  output.on('end', function() {
+    console.log('Data has been drained');
+  });
+
+  output.on('finish', function() {
+    console.log('finish');
+    const uploadParams = {Bucket: "docker-6998", Key: '', Body: ''};
+    const fileStream = fs.createReadStream(filePath);
+
+    fileStream.on('error', function(err) {
+      console.log('fileStream Error', err);
+    });
+    uploadParams.Body = fileStream;
+    uploadParams.Key = path.basename(fileName);
+
+// call S3 to retrieve upload file to specified bucket
+
+    s3.putObject(uploadParams, function (err, data) {
+      if (err) {
+        console.log("putObject Error", err);
+      } if (data) {
+      }
+      cb(err, data, uploadParams.Key, fileName);
+    });
+
+  });
+
   archive.pipe(output);
-  archive.file('/tmp/requirements.txt', { name: 'requirements.txt' })
-  archive.file('/tmp/Dockerfile', { name: 'Dockerfile' })
-  archive.file('/tmp/file.py', { name: 'file.py' })
-  archive.file('/tmp/docker-compose.yml', { name: 'docker-compose.yml' })
+  archive.file(`${DIR}/requirements.txt`, "")
+  archive.file(`${DIR}/Dockerfile`, "")
+  archive.file(`${DIR}/app.py`, "")
+  archive.file(`${DIR}/docker-compose.yml`, "")
   archive.finalize();
 
 
 
-  // cb();
-  const uploadParams = {Bucket: "docker-6998", Key: '', Body: ''};
-  const fileStream = fs.createReadStream(filePath);
-
-  fileStream.on('error', function(err) {
-    console.log('File Error', err);
-  });
-  uploadParams.Body = fileStream;
-  uploadParams.Key = path.basename(fileName);
-
-// call S3 to retrieve upload file to specified bucket
-  s3.upload (uploadParams, function (err, data) {
-    if (err) {
-      console.log("Error", err);
-    } if (data) {
-      console.log("Upload Success", data.Location);
-    }
-    cb(err, data, fileName);
-  });
-
 };
+
+const addToSQS = (user, projectId, projectName, key, cb)=>{
+  const MessageAttributes = {
+    User: {
+      DataType: "String",
+      StringValue: user
+    },
+    ProjectName: {
+      DataType: "String",
+      StringValue: projectName
+    },
+    ProjectId: {
+      DataType: "String",
+      StringValue: projectId
+    },
+    S3key: {
+      DataType: "String",
+      StringValue: key
+    },
+  };
+
+  var params = {
+    DelaySeconds: 1,
+    MessageAttributes,
+    MessageBody: "New Version",
+    QueueUrl: "https://sqs.us-east-1.amazonaws.com/906385631751/ml-runner"
+  };
+
+  sqs.sendMessage(params, function(err, data) {
+    if (err) {
+      console.log("sendMessage with sqs:", err);
+    } else {
+    }
+    cb(err)
+  });
+
+}
 
 exports.handler = (event, context, callback) => {
   let options = event.options;
   let codeArr = event.codeArr;
   let user = event.user;
+  let projectName = event.projectName;
+  const projectId = randomstring.generate(7);
   const allCombos = allPossibleCombos(options);
 
   let i = 0;
   const re = {};
   async.eachSeries(allCombos, (op, cb)=>{
     const file = renderFile(codeArr, op);
-    createZipAndUpload(file, i++, (err, data, fileName)=>{
+    createZipAndUpload(file, i++, (err, data, key, fileName)=>{
       const id = `job_${i}`;
       re[id] = {
         file: file.finalFile,
@@ -242,10 +292,14 @@ exports.handler = (event, context, callback) => {
         s3: data,
         err,
         id: fileName,
-        user: user
+        user: user,
+        projectName,
+        projectId,
+        mode: "init"
       };
-      console.log("return for ", id);
-      cb();
+      addToSQS(user, projectId, projectName, key, (err)=>{
+        cb();
+      })
     })
   }, (err1)=>{
     saveRuns(re, user, (err)=>{
